@@ -1,3 +1,8 @@
 fastapi
 uvicorn
 sqlalchemy
+python-jose
+argon2-cffi
+python-multipart
+redis
+celery

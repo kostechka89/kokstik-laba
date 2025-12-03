@@ -1,27 +1,25 @@
 from datetime import datetime
-from typing import List, Optional, Any
+from typing import Optional, List, Dict, Any
+from pydantic import BaseModel, EmailStr
 
-from pydantic import BaseModel, EmailStr, Field
-
-
-class CommentBase(BaseModel):
-    text: str = Field(..., min_length=1)
+from .models import UserRole
 
 
-class CommentCreate(CommentBase):
-    news_id: int
-    author_id: int
+class UserBase(BaseModel):
+    name: str
+    email: EmailStr
+    is_verified_author: bool = False
+    avatar: Optional[str] = None
+    role: UserRole = UserRole.user
 
 
-class CommentUpdate(CommentBase):
-    pass
+class UserCreate(UserBase):
+    password: str
 
 
-class Comment(CommentBase):
+class UserOut(UserBase):
     id: int
-    author_id: int
-    news_id: int
-    created_at: datetime
+    registered_at: datetime
 
     class Config:
         orm_mode = True
@@ -29,48 +27,66 @@ class Comment(CommentBase):
 
 class NewsBase(BaseModel):
     title: str
-    content: Any
-    cover_url: Optional[str] = None
+    content: Dict[str, Any]
+    cover: Optional[str] = None
 
 
 class NewsCreate(NewsBase):
     author_id: int
 
 
-class NewsUpdate(NewsBase):
-    pass
+class NewsUpdate(BaseModel):
+    title: Optional[str] = None
+    content: Optional[Dict[str, Any]] = None
+    cover: Optional[str] = None
 
 
-class News(NewsBase):
+class CommentBase(BaseModel):
+    text: str
+
+
+class CommentCreate(CommentBase):
+    news_id: int
+    author_id: int
+
+
+class CommentUpdate(BaseModel):
+    text: Optional[str] = None
+
+
+class CommentOut(CommentBase):
     id: int
+    news_id: int
     author_id: int
     published_at: datetime
-    comments: List[Comment] = []
 
     class Config:
         orm_mode = True
 
 
-class UserBase(BaseModel):
-    name: str
-    email: EmailStr
-    avatar_url: Optional[str] = None
-
-
-class UserCreate(UserBase):
-    is_verified_author: bool = False
-
-
-class UserUpdate(BaseModel):
-    name: Optional[str] = None
-    avatar_url: Optional[str] = None
-    is_verified_author: Optional[bool] = None
-
-
-class User(UserBase):
+class NewsOut(NewsBase):
     id: int
-    registered_at: datetime
-    is_verified_author: bool
+    published_at: datetime
+    author_id: int
+    comments: List[CommentOut] = []
 
     class Config:
         orm_mode = True
+
+
+class Token(BaseModel):
+    access_token: str
+    refresh_token: str
+    token_type: str = "bearer"
+
+
+class TokenPayload(BaseModel):
+    sub: str
+    role: UserRole
+
+
+class SessionOut(BaseModel):
+    session_id: str
+    user_agent: str
+    user_id: int
+    expires_at: datetime

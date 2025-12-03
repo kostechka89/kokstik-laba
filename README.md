@@ -1,52 +1,68 @@
 # News API
 
-Простейшая реализация CRUD API на FastAPI для сущностей «пользователь», «новость» и «комментарий». Используется SQLAlchemy и SQLite по умолчанию (можно переключить на Postgres через `DATABASE_URL`). Создание новостей разрешено только для верифицированных авторов.
+FastAPI application implementing CRUD for users, news, and comments with JWT authentication, role checks, Redis caching, and Celery notifications.
 
-## Запуск локально
-1. Создайте виртуальное окружение Python 3.10+ и активируйте его.
-2. Установите зависимости:
+## Features
+- Users with roles (`user`, `admin`) and verification flag for authors.
+- Password hashing with Argon2; JWT access/refresh tokens.
+- Role enforcement: only verified authors or admins can create news; only authors/admins can edit/delete their content.
+- Redis cache for news list and detail (TTL 5 minutes) and refresh sessions; in-memory fallback when Redis is unavailable.
+- Celery tasks for new-news notifications and weekly digest (logged to `notifications.log`).
+
+## Setup
+1. Create virtual environment and install dependencies:
    ```bash
+   python -m venv .venv
+   source .venv/bin/activate
    pip install -r requirements.txt
    ```
-3. Запустите сервер разработки:
+2. Provide environment variables (or `.env`):
+   ```bash
+   DATABASE_URL=postgresql://user:password@localhost:5432/news
+   SECRET_KEY=your-secret
+   REDIS_URL=redis://localhost:6379/0
+   GITHUB_CLIENT_ID=placeholder
+   GITHUB_CLIENT_SECRET=placeholder
+   ```
+   SQLite is used by default if `DATABASE_URL` is not set.
+3. Run the API:
    ```bash
    uvicorn app.main:app --reload
    ```
-4. API будет доступно по адресу `http://127.0.0.1:8000`.
+4. (Optional) Run Celery worker and beat for scheduled digest:
+   ```bash
+   celery -A app.tasks.celery_app worker --loglevel=info
+   celery -A app.tasks.celery_app beat --loglevel=info
+   ```
 
-## Примеры использования
-Создание пользователя (email уникален):
+## Example requests
+- Register user:
+  ```bash
+  curl -X POST http://localhost:8000/auth/register -H "Content-Type: application/json" -d '{"name":"Admin","email":"admin@example.com","password":"secret","role":"admin"}'
+  ```
+- Login:
+  ```bash
+  curl -X POST http://localhost:8000/auth/login -H "Content-Type: application/x-www-form-urlencoded" -d 'username=admin@example.com&password=secret'
+  ```
+- Create news (requires verified author or admin, Authorization header with bearer token):
+  ```bash
+  curl -X POST http://localhost:8000/news/ -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
+    -d '{"title":"Hello","content":{"body":"hi"},"author_id":1}'
+  ```
+- Create comment:
+  ```bash
+  curl -X POST http://localhost:8000/comments/ -H "Authorization: Bearer <token>" -H "Content-Type: application/json" \
+    -d '{"text":"Nice","news_id":1,"author_id":1}'
+  ```
+
+## Testing
+The codebase compiles under Python using:
+
 ```bash
-curl -X POST http://127.0.0.1:8000/users/ \
-  -H "Content-Type: application/json" \
-  -d '{"name": "Alice", "email": "alice@example.com", "avatar_url": null, "is_verified_author": true}'
+python -m compileall app
 ```
 
-Создание новости (требуется `is_verified_author=true` у автора):
-```bash
-curl -X POST http://127.0.0.1:8000/news/ \
-  -H "Content-Type: application/json" \
-  -d '{"title": "First", "content": {"body": "Hello"}, "author_id": 1}'
-```
-
-Создание комментария:
-```bash
-curl -X POST http://127.0.0.1:8000/comments/ \
-  -H "Content-Type: application/json" \
-  -d '{"text": "Nice post", "news_id": 1, "author_id": 1}'
-```
-
-Обновление и удаление поддерживаются для всех сущностей через `PATCH /{resource}/{id}` и `DELETE /{resource}/{id}`. Список и получение элемента — `GET /{resource}` и `GET /{resource}/{id}`.
-
-## Описание данных
-- Пользователь: `name`, `email` (уникальный), `registered_at`, `is_verified_author`, `avatar_url`.
-- Новость: `title`, `content` (JSON), `published_at`, `author_id`, `cover_url`.
-- Комментарий: `text`, `news_id`, `author_id`, `created_at`.
-
-## Дальнейшие шаги
-Эта реализация покрывает базовый CRUD. Для полного соответствия ТЗ нужно добавить:
-- миграции Alembic и мок-данные;
-- авторизацию (JWT + GitHub OAuth), роли и управление сессиями;
-- кэш Redis и хранение сессий в Redis;
-- Celery таски для уведомлений и дайджеста;
-- отдельный фронтенд на Vite/React.
+## Notes
+- Refresh sessions are stored in Redis (or in-memory fallback) with TTL derived from refresh token lifetime.
+- News endpoints log when cache is used.
+- Celery tasks log notification events to `notifications.log` to emulate email sending.

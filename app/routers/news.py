@@ -1,61 +1,93 @@
+import logging
 from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 
 from .. import models, schemas
 from ..database import get_db
+from ..security import get_current_user
+from ..cache import cache_client
+from ..tasks import notify_new_news
 
 router = APIRouter(prefix="/news", tags=["news"])
+logger = logging.getLogger(__name__)
+CACHE_TTL = 300
 
 
-@router.post("/", response_model=schemas.News, status_code=status.HTTP_201_CREATED)
-def create_news(payload: schemas.NewsCreate, db: Session = Depends(get_db)):
-    author = db.query(models.User).get(payload.author_id)
-    if not author:
-        raise HTTPException(status_code=404, detail="Author not found")
-    if not author.is_verified_author:
-        raise HTTPException(status_code=403, detail="Author is not verified to publish")
-    news = models.News(
-        title=payload.title,
-        content=payload.content,
-        cover_url=payload.cover_url,
-        author_id=payload.author_id,
-    )
-    db.add(news)
+def _ensure_can_modify(news: models.News, user: models.User):
+    if user.role == models.UserRole.admin:
+        return
+    if news.author_id != user.id:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="You cannot modify this news")
+
+
+@router.post("/", response_model=schemas.NewsOut, status_code=status.HTTP_201_CREATED)
+def create_news(news: schemas.NewsCreate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
+    if not current_user.is_verified_author and current_user.role != models.UserRole.admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="User not verified as author")
+    if news.author_id != current_user.id and current_user.role != models.UserRole.admin:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Cannot create news for another user")
+    db_news = models.News(**news.dict())
+    db.add(db_news)
     db.commit()
-    db.refresh(news)
-    return news
+    db.refresh(db_news)
+    cache_client.set_json(f"news:{db_news.id}", schemas.NewsOut.from_orm(db_news).dict(), CACHE_TTL)
+    try:
+        notify_new_news.delay(db_news.id)
+    except Exception:
+        logger.warning("Celery broker unavailable; notification skipped")
+    return db_news
 
 
-@router.get("/", response_model=list[schemas.News])
+@router.get("/", response_model=list[schemas.NewsOut])
 def list_news(db: Session = Depends(get_db)):
-    return db.query(models.News).all()
+    cached = cache_client.get_json("news:list")
+    if cached:
+        logger.info("news list served from cache")
+        return cached
+    news_items = db.query(models.News).all()
+    data = [schemas.NewsOut.from_orm(item).dict() for item in news_items]
+    cache_client.set_json("news:list", data, CACHE_TTL)
+    return news_items
 
 
-@router.get("/{news_id}", response_model=schemas.News)
+@router.get("/{news_id}", response_model=schemas.NewsOut)
 def get_news(news_id: int, db: Session = Depends(get_db)):
+    cached = cache_client.get_json(f"news:{news_id}")
+    if cached:
+        logger.info("news %s served from cache", news_id)
+        return cached
     news = db.query(models.News).get(news_id)
     if not news:
-        raise HTTPException(status_code=404, detail="News not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="News not found")
+    payload = schemas.NewsOut.from_orm(news).dict()
+    cache_client.set_json(f"news:{news_id}", payload, CACHE_TTL)
     return news
 
 
-@router.patch("/{news_id}", response_model=schemas.News)
-def update_news(news_id: int, payload: schemas.NewsUpdate, db: Session = Depends(get_db)):
+@router.put("/{news_id}", response_model=schemas.NewsOut)
+def update_news(news_id: int, news_update: schemas.NewsUpdate, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     news = db.query(models.News).get(news_id)
     if not news:
-        raise HTTPException(status_code=404, detail="News not found")
-    for field, value in payload.dict(exclude_unset=True).items():
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="News not found")
+    _ensure_can_modify(news, current_user)
+    for field, value in news_update.dict(exclude_unset=True).items():
         setattr(news, field, value)
     db.commit()
     db.refresh(news)
+    payload = schemas.NewsOut.from_orm(news).dict()
+    cache_client.set_json(f"news:{news.id}", payload, CACHE_TTL)
+    cache_client.delete("news:list")
     return news
 
 
-@router.delete("/{news_id}", status_code=status.HTTP_204_NO_CONTENT)
-def delete_news(news_id: int, db: Session = Depends(get_db)):
+@router.delete("/{news_id}")
+def delete_news(news_id: int, db: Session = Depends(get_db), current_user: models.User = Depends(get_current_user)):
     news = db.query(models.News).get(news_id)
     if not news:
-        raise HTTPException(status_code=404, detail="News not found")
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="News not found")
+    _ensure_can_modify(news, current_user)
     db.delete(news)
     db.commit()
-    return None
+    cache_client.delete(f"news:{news_id}")
+    cache_client.delete("news:list")
+    return {"status": "deleted"}
