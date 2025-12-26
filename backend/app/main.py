@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from datetime import datetime
+from uuid import uuid4
 
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -66,21 +67,36 @@ def write_metrics_log(payload: dict) -> None:
 
 @app.middleware("http")
 async def log_requests(request: Request, call_next):
+    request_id = request.headers.get("X-Request-ID") or str(uuid4())
+    request.state.request_id = request_id
     with REQUEST_LATENCY.labels(path=request.url.path).time():
         try:
             response = await call_next(request)
         except Exception as exc:  # noqa: BLE001
-            logger.error("request_error", path=str(request.url.path), error=str(exc))
+            logger.error(
+                "request_error",
+                path=str(request.url.path),
+                error=str(exc),
+                request_id=request_id,
+            )
             raise
 
+    response.headers["X-Request-ID"] = request_id
     REQUEST_COUNT.labels(method=request.method, path=request.url.path, status=response.status_code).inc()
-    logger.info("request", method=request.method, path=str(request.url.path), status=response.status_code)
+    logger.info(
+        "request",
+        method=request.method,
+        path=str(request.url.path),
+        status=response.status_code,
+        request_id=request_id,
+    )
     write_metrics_log(
         {
             "timestamp": datetime.utcnow().isoformat(),
             "method": request.method,
             "path": str(request.url.path),
             "status": response.status_code,
+            "request_id": request_id,
         }
     )
     return response
@@ -88,7 +104,12 @@ async def log_requests(request: Request, call_next):
 
 @app.exception_handler(Exception)
 async def handle_exception(request: Request, exc: Exception):
-    logger.error("unhandled_exception", path=str(request.url.path), error=str(exc))
+    logger.error(
+        "unhandled_exception",
+        path=str(request.url.path),
+        error=str(exc),
+        request_id=getattr(request.state, "request_id", None),
+    )
     if hawk_client is not None:
         try:
             # hawk-python-sdk: hawk.send(exc)
