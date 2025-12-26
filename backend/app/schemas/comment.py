@@ -1,5 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel
+from app.schemas.user import UserPublic
 
 
 class CommentBase(BaseModel):
@@ -19,6 +20,7 @@ class CommentRead(CommentBase):
     published_at: datetime
     news_id: int
     author_id: int
+    author: UserPublic | None = None
 
     class Config:
         from_attributes = True

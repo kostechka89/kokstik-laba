@@ -3,7 +3,9 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user, require_verified_author, resolve_news
 from app.db.session import get_db
 from app.schemas.news import NewsCreate, NewsRead, NewsUpdate
+from app.schemas.comment import CommentRead
 from app.crud.news import create_news, list_news, update_news, delete_news
+from app.crud.comments import list_comments
 from app.services.cache import cache_service
 from app.db.models import User, News
 from app.workers.tasks import send_news_notification
@@ -38,6 +40,14 @@ def get_one(news_id: int, db: Session = Depends(get_db)):
         raise HTTPException(status_code=404, detail="Not found")
     cache_service.set_json(_news_cache_key(news_id), NewsRead.model_validate(news_item).model_dump(), CACHE_TTL)
     return news_item
+
+
+@router.get("/{news_id}/comments", response_model=list[CommentRead])
+def list_news_comments(news_id: int, db: Session = Depends(get_db)):
+    news_item = db.query(News).filter(News.id == news_id).first()
+    if not news_item:
+        raise HTTPException(status_code=404, detail="Not found")
+    return list_comments(db, news_id)
 
 
 @router.post("/", response_model=NewsRead)

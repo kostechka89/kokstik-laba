@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react'
-import { apiFetch } from '../api/client.js'
+import { apiFetch, setTokens } from '../api/client.js'
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000'
+const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
-export default function Login() {
+export default function Login({ onAuth, currentUser }) {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [message, setMessage] = useState('')
@@ -11,18 +11,24 @@ export default function Login() {
   useEffect(() => {
     // GitHub OAuth callback: tokens are returned as query params
     const url = new URL(window.location.href)
-    const access = url.searchParams.get('access_token')
-    const refresh = url.searchParams.get('refresh_token')
+    const params = new URLSearchParams(url.search)
+    const hashParams = new URLSearchParams(window.location.hash.replace('#', ''))
+    const access = params.get('access_token') || hashParams.get('access_token')
+    const refresh = params.get('refresh_token') || hashParams.get('refresh_token')
     if (access) {
-      localStorage.setItem('access_token', access)
-      if (refresh) localStorage.setItem('refresh_token', refresh)
+      setTokens({ accessToken: access, refreshToken: refresh })
       setMessage('Успешно (GitHub)')
+      onAuth?.()
       // clean url
-      url.searchParams.delete('access_token')
-      url.searchParams.delete('refresh_token')
+      params.delete('access_token')
+      params.delete('refresh_token')
+      url.search = params.toString()
       window.history.replaceState({}, '', url.toString())
+      if (window.location.hash) {
+        window.history.replaceState({}, '', window.location.pathname)
+      }
     }
-  }, [])
+  }, [onAuth])
 
   const onSubmit = async (event) => {
     event.preventDefault()
@@ -31,9 +37,9 @@ export default function Login() {
         method: 'POST',
         body: JSON.stringify({ email, password }),
       })
-      localStorage.setItem('access_token', data.access_token)
-      localStorage.setItem('refresh_token', data.refresh_token)
+      setTokens({ accessToken: data.access_token, refreshToken: data.refresh_token })
       setMessage('Успешно')
+      onAuth?.()
     } catch (err) {
       setMessage(err.message)
     }
@@ -42,6 +48,11 @@ export default function Login() {
   return (
     <section>
       <h1>Авторизация</h1>
+      {currentUser && (
+        <div className="notice">
+          Вы уже вошли как <strong>{currentUser.name}</strong>. Можно выходить и заходить под другим пользователем.
+        </div>
+      )}
       <form onSubmit={onSubmit} className="form">
         <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
         <input
