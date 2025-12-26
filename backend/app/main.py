@@ -12,6 +12,8 @@ from app.api import auth, comments, news, users
 from app.core.config import get_settings
 from app.core.logging import configure_logging
 from app.services.metrics import REQUEST_COUNT, REQUEST_LATENCY
+from app.db.session import get_engine
+from app.services.cache import cache_service
 
 
 logger = configure_logging()
@@ -97,6 +99,35 @@ async def handle_exception(request: Request, exc: Exception):
         except Exception:  # noqa: BLE001
             pass
     return JSONResponse(status_code=500, content={"detail": "Internal error"})
+
+
+@app.get("/health")
+def health():
+    return {"status": "ok"}
+
+
+@app.get("/live")
+def live():
+    return {"status": "alive"}
+
+
+@app.get("/ready")
+def ready():
+    engine = get_engine()
+    try:
+        with engine.connect() as connection:
+            connection.exec_driver_sql("SELECT 1")
+    except Exception:  # noqa: BLE001
+        return JSONResponse(status_code=503, content={"status": "db_unavailable"})
+
+    if cache_service.client is None:
+        return JSONResponse(status_code=503, content={"status": "redis_unavailable"})
+    try:
+        cache_service.client.ping()
+    except Exception:  # noqa: BLE001
+        return JSONResponse(status_code=503, content={"status": "redis_unavailable"})
+
+    return {"status": "ready"}
 
 
 @app.get("/metrics")
