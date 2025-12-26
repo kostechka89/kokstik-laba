@@ -1,0 +1,152 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: news
+    ports:
+      - "5432:5432"
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d news"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+
+  backend:
+    build:
+      context: ./backend
+    environment:
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/news
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: change_me_in_env
+      ACCESS_TOKEN_EXPIRE_MINUTES: "30"
+      REFRESH_TOKEN_EXPIRE_MINUTES: "10080"
+      FRONTEND_URL: http://localhost:5173
+      GITHUB_CLIENT_ID: Ov23liDqxPu4bjGARwC7
+      GITHUB_CLIENT_SECRET: 6f282a5798aed4b4732fef276dbdfe8124535967
+      LOG_FILE: /var/log/app/app.jsonl
+      # HAWK_TOKEN: ""  # optional
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+    ports:
+      - "8000:8000"
+    volumes:
+      - app_logs:/var/log/app
+    command: >
+      sh -c "
+      for i in 1 2 3 4 5; do
+        alembic upgrade head && break || sleep 2;
+      done
+      && uvicorn app.main:app --host 0.0.0.0 --port 8000
+      "
+
+
+  celery_worker:
+    build:
+      context: ./backend
+    command: celery -A app.workers.tasks worker --loglevel=INFO
+    environment:
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/news
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: change_me_in_env
+      LOG_FILE: /var/log/app/app.jsonl
+    depends_on:
+      - backend
+      - redis
+      - postgres
+    volumes:
+      - app_logs:/var/log/app
+
+  celery_beat:
+    build:
+      context: ./backend
+    command: celery -A app.workers.tasks beat --loglevel=INFO
+    environment:
+      DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/news
+      REDIS_URL: redis://redis:6379/0
+      SECRET_KEY: change_me_in_env
+      LOG_FILE: /var/log/app/app.jsonl
+    depends_on:
+      - backend
+      - redis
+      - postgres
+    volumes:
+      - app_logs:/var/log/app
+
+  frontend:
+    build:
+      context: ./frontend
+    environment:
+      VITE_API_URL: http://localhost:8000
+    depends_on:
+      - backend
+    ports:
+      - "5173:5173"
+    command: npm run dev -- --host 0.0.0.0 --port 5173
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    volumes:
+      - ./infra/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - backend
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:8.15.2
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - ES_JAVA_OPTS=-Xms512m -Xmx512m
+    ports:
+      - "9200:9200"
+    volumes:
+      - es_data:/usr/share/elasticsearch/data
+
+  logstash:
+    image: docker.elastic.co/logstash/logstash:8.15.2
+    volumes:
+      - ./infra/logstash.conf:/usr/share/logstash/pipeline/logstash.conf:ro
+      - app_logs:/var/log/app
+    depends_on:
+      - elasticsearch
+      - backend
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.15.2
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    ports:
+      - "5601:5601"
+    depends_on:
+      - elasticsearch
+
+volumes:
+  pg_data:
+  redis_data:
+  grafana_data:
+  es_data:
+  app_logs:
