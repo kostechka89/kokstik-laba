@@ -11,10 +11,10 @@ body::before {
   inset: 0;
   pointer-events: none;
   background-image:
-    radial-gradient(circle at 10% 10%, rgba(255,255,255,0.9) 0 2px, rgba(255,255,255,0) 3px),
-    radial-gradient(circle at 40% 30%, rgba(255,255,255,0.8) 0 1px, rgba(255,255,255,0) 2px),
-    radial-gradient(circle at 70% 20%, rgba(255,255,255,0.9) 0 2px, rgba(255,255,255,0) 3px),
-    radial-gradient(circle at 90% 40%, rgba(255,255,255,0.8) 0 1px, rgba(255,255,255,0) 2px);
+    radial-gradient(circle at 10% 10%, rgba(120,190,255,0.9) 0 2px, rgba(255,255,255,0) 3px),
+    radial-gradient(circle at 40% 30%, rgba(140,200,255,0.8) 0 1px, rgba(255,255,255,0) 2px),
+    radial-gradient(circle at 70% 20%, rgba(110,180,255,0.9) 0 2px, rgba(255,255,255,0) 3px),
+    radial-gradient(circle at 90% 40%, rgba(150,210,255,0.8) 0 1px, rgba(255,255,255,0) 2px);
   background-size: 300px 300px;
   animation: snowFall 14s linear infinite;
   opacity: 0.6;
@@ -141,6 +141,18 @@ body::before {
   padding: 12px;
   border-radius: 6px;
   margin-bottom: 16px;
+}
+
+.success {
+  color: #116329;
+  font-size: 14px;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
 }
 
 .form {

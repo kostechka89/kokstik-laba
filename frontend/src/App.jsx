@@ -3,6 +3,7 @@ import { useEffect, useState } from 'react'
 import Home from './pages/Home.jsx'
 import NewsDetail from './pages/NewsDetail.jsx'
 import Login from './pages/Login.jsx'
+import Register from './pages/Register.jsx'
 import { apiFetch, clearTokens, getToken } from './api/client.js'
 import './styles/app.css'
 
@@ -55,9 +56,14 @@ export default function App() {
               </button>
             </>
           ) : (
-            <Link to="/login" className="button">
-              Войти
-            </Link>
+            <>
+              <Link to="/login" className="button">
+                Войти
+              </Link>
+              <Link to="/register" className="button ghost">
+                Регистрация
+              </Link>
+            </>
           )}
         </div>
       </header>
@@ -67,6 +73,7 @@ export default function App() {
           <Route path="/" element={<Home currentUser={currentUser} />} />
           <Route path="/news/:id" element={<NewsDetail currentUser={currentUser} />} />
           <Route path="/login" element={<Login onAuth={loadCurrentUser} currentUser={currentUser} />} />
+          <Route path="/register" element={<Register />} />
         </Routes>
       </main>
     </BrowserRouter>

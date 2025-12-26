@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from datetime import datetime, timedelta
 
 from celery import Celery
@@ -24,7 +25,9 @@ celery_app.conf.beat_schedule = {
 
 
 logger = logging.getLogger("notifications")
-handler = logging.FileHandler("notifications.log")
+log_path = Path("/var/log/app/notifications.log")
+log_path.parent.mkdir(parents=True, exist_ok=True)
+handler = logging.FileHandler(log_path)
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 

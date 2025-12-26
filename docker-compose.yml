@@ -57,7 +57,12 @@ services:
   celery_worker:
     build:
       context: ./backend
-    command: celery -A app.workers.tasks worker --loglevel=INFO
+    command: >
+      sh -c "
+      mkdir -p /var/log/app
+      && touch /var/log/app/notifications.log
+      && celery -A app.workers.tasks worker --loglevel=INFO
+      "
     environment:
       DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/news
       REDIS_URL: redis://redis:6379/0
@@ -73,7 +78,12 @@ services:
   celery_beat:
     build:
       context: ./backend
-    command: celery -A app.workers.tasks beat --loglevel=INFO
+    command: >
+      sh -c "
+      mkdir -p /var/log/app
+      && touch /var/log/app/notifications.log
+      && celery -A app.workers.tasks beat --loglevel=INFO
+      "
     environment:
       DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/news
       REDIS_URL: redis://redis:6379/0
