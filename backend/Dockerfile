@@ -16,6 +16,8 @@ RUN pip install --no-cache-dir -r /app/requirements.txt
 COPY requirements-dev.txt /app/requirements-dev.txt
 RUN pip install --no-cache-dir -r /app/requirements-dev.txt
 
+RUN python -m playwright install --with-deps chromium
+
 COPY alembic.ini /app/alembic.ini
 COPY alembic /app/alembic
 COPY app /app/app

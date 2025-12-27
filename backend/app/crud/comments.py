@@ -30,3 +30,7 @@ def update_comment(db: Session, comment: Comment, payload: CommentUpdate) -> Com
 def delete_comment(db: Session, comment: Comment) -> None:
     db.delete(comment)
     db.commit()
+
+
+def list_by_news_id(db: Session, news_id: int) -> list[Comment]:
+    return db.query(Comment).filter(Comment.news_id == news_id).all()
