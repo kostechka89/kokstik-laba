@@ -14,7 +14,7 @@ class CacheService:
         try:
             self.client: Redis | None = redis.Redis.from_url(settings.redis_url, decode_responses=True)
             self.client.ping()
-        except Exception:  # noqa: BLE001
+        except Exception:
             self.client = None
 
         self.local_cache: dict[str, Any] = {}
@@ -28,7 +28,6 @@ class CacheService:
         return self.local_cache.get(key)
 
     def set_json(self, key: str, value: Any, ttl: int) -> None:
-        # IMPORTANT: make value JSON-serializable (datetime -> ISO string, etc.)
         payload = jsonable_encoder(value)
 
         if self.client:

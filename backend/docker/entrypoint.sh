@@ -3,6 +3,9 @@ set -e
 
 echo "Starting backend..."
 
+mkdir -p /var/log/app
+touch /var/log/app/notifications.log
+
 # If DATABASE_URL points to postgres in compose, wait a bit for readiness
 if [ -n "$DATABASE_URL" ]; then
   echo "DATABASE_URL is set. Waiting for database..."

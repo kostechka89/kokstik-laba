@@ -1,5 +1,6 @@
 from datetime import datetime
 from pydantic import BaseModel
+from app.schemas.user import UserPublic
 
 
 class NewsBase(BaseModel):
@@ -22,6 +23,7 @@ class NewsRead(NewsBase):
     id: int
     published_at: datetime
     author_id: int
+    author: UserPublic | None = None
 
     class Config:
         from_attributes = True
