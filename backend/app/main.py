@@ -154,3 +154,8 @@ def ready():
 @app.get("/metrics")
 def metrics():
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+
+@app.get("/debug/hawk-error")
+def hawk_error():
+    raise RuntimeError("Hawk debug error")
