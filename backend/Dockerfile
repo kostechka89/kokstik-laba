@@ -5,7 +5,6 @@ ENV PYTHONDONTWRITEBYTECODE=1 \
 
 WORKDIR /app
 
-# System deps
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     && rm -rf /var/lib/apt/lists/*
@@ -24,7 +23,6 @@ COPY app /app/app
 COPY tests /app/tests
 COPY docs /app/docs
 
-# Logs (shared with logstash)
 RUN mkdir -p /var/log/app
 
 EXPOSE 8000

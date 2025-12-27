@@ -9,7 +9,7 @@ from app.crud.comments import list_comments
 from app.services.cache import cache_service
 from app.db.models import User, News
 from app.workers.tasks import send_news_notification
-from app.services.metrics import NEWS_CREATED
+from app.services.metrics import NEWS_CREATED, NOTIFICATIONS_SENT
 
 router = APIRouter(prefix="/news", tags=["news"])
 CACHE_TTL = 300
@@ -67,8 +67,9 @@ def create(
         cache_service.set_json(key, True, ttl=3600)
         try:
             send_news_notification.delay(user.email, news_item.id)
-        except Exception:  # noqa: BLE001
+        except Exception:
             pass
+        NOTIFICATIONS_SENT.inc()
     return news_item
 
 

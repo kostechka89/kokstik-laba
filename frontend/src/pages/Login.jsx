@@ -9,7 +9,6 @@ export default function Login({ onAuth, currentUser }) {
   const [message, setMessage] = useState('')
 
   useEffect(() => {
-    // GitHub OAuth callback: tokens are returned as query params
     const url = new URL(window.location.href)
     const params = new URLSearchParams(url.search)
     const hashParams = new URLSearchParams(window.location.hash.replace('#', ''))
@@ -19,7 +18,6 @@ export default function Login({ onAuth, currentUser }) {
       setTokens({ accessToken: access, refreshToken: refresh })
       setMessage('Успешно (GitHub)')
       onAuth?.()
-      // clean url
       params.delete('access_token')
       params.delete('refresh_token')
       url.search = params.toString()

@@ -21,26 +21,24 @@ logger = configure_logging()
 settings = get_settings()
 
 
-# Optional integration: do not break app startup if hawk sdk isn't available.
 hawk_client = None
 if settings.hawk_token:
     try:
-        from hawk_python_sdk import Hawk  # type: ignore
+        from hawk_python_sdk import Hawk
 
         hawk_client = Hawk(settings.hawk_token)
-    except Exception:  # noqa: BLE001
+    except Exception:
         try:
-            from hawkcatcher import HawkCatcher  # type: ignore
+            from hawkcatcher import HawkCatcher
 
             hawk_client = HawkCatcher(settings.hawk_token)
-        except Exception:  # noqa: BLE001
+        except Exception:
             hawk_client = None
 
 
 app = FastAPI(title="News API")
 
 
-# Allow browser frontend (Vite dev server) to call the API.
 app.add_middleware(
     CORSMiddleware,
     allow_origins=[
@@ -72,7 +70,7 @@ async def log_requests(request: Request, call_next):
     with REQUEST_LATENCY.labels(path=request.url.path).time():
         try:
             response = await call_next(request)
-        except Exception as exc:  # noqa: BLE001
+        except Exception as exc:
             logger.error(
                 "request_error",
                 path=str(request.url.path),
@@ -112,12 +110,11 @@ async def handle_exception(request: Request, exc: Exception):
     )
     if hawk_client is not None:
         try:
-            # hawk-python-sdk: hawk.send(exc)
             if hasattr(hawk_client, "send"):
                 hawk_client.send(exc)
             else:
-                hawk_client.send_exception(exc)  # type: ignore[attr-defined]
-        except Exception:  # noqa: BLE001
+                hawk_client.send_exception(exc)
+        except Exception:
             pass
     return JSONResponse(status_code=500, content={"detail": "Internal error"})
 
@@ -138,14 +135,14 @@ def ready():
     try:
         with engine.connect() as connection:
             connection.exec_driver_sql("SELECT 1")
-    except Exception:  # noqa: BLE001
+    except Exception:
         return JSONResponse(status_code=503, content={"status": "db_unavailable"})
 
     if cache_service.client is None:
         return JSONResponse(status_code=503, content={"status": "redis_unavailable"})
     try:
         cache_service.client.ping()
-    except Exception:  # noqa: BLE001
+    except Exception:
         return JSONResponse(status_code=503, content={"status": "redis_unavailable"})
 
     return {"status": "ready"}

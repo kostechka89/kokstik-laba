@@ -4,7 +4,6 @@ body {
   background: #f5f5f5;
 }
 
-/* лёгкий "снег" без JS */
 body::before {
   content: "";
   position: fixed;
