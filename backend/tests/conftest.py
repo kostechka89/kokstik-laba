@@ -1,3 +1,5 @@
+from uuid import uuid4
+
 import pytest
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker
@@ -5,6 +7,7 @@ from fastapi.testclient import TestClient
 from app.main import app
 from app.db.session import Base
 from app.db.session import get_db
+from tests.utils import register
 
 SQLALCHEMY_DATABASE_URL = "sqlite:///./test.db"
 engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False})
@@ -33,3 +36,11 @@ app.dependency_overrides[get_db] = override_get_db
 @pytest.fixture()
 def client():
     return TestClient(app)
+
+
+@pytest.fixture()
+def test_user(client):
+    email = f"user_{uuid4().hex}@example.com"
+    password = "pass"
+    register(client, email, password)
+    return {"email": email, "password": password}
