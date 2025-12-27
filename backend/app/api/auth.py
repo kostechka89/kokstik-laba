@@ -24,7 +24,6 @@ def _github_sso() -> GithubSSO:
     return GithubSSO(
         client_id=settings.github_client_id,
         client_secret=settings.github_client_secret,
-        # Must match GitHub OAuth App "Authorization callback URL"
         redirect_uri="http://localhost:8000/auth/github/callback",
         allow_insecure_http=True,
     )
@@ -48,7 +47,7 @@ async def github_callback(request: Request, db: Session = Depends(get_db)):
 
     try:
         gh_user = await sso.verify_and_process(request)
-    except Exception:  # noqa: BLE001
+    except Exception:
         raise HTTPException(status_code=401, detail="GitHub OAuth failed")
 
     email = getattr(gh_user, "email", None) or (gh_user.get("email") if isinstance(gh_user, dict) else None)
@@ -95,8 +94,6 @@ async def github_callback(request: Request, db: Session = Depends(get_db)):
 
 @router.post("/register", response_model=UserRead)
 def register(payload: UserCreate, db: Session = Depends(get_db)):
-    # ВАЖНО: если по ТЗ нельзя самому ставить is_admin/is_verified_author — то надо принудительно обнулять тут.
-    # Сейчас у тебя по ТЗ допускается автор через is_verified_author? Если нет — скажи, и я сделаю строго.
     if get_user_by_email(db, payload.email):
         raise HTTPException(status_code=400, detail="Email already exists")
 
@@ -166,8 +163,6 @@ def me(current_user=Depends(get_current_user), db: Session = Depends(get_db)):
     """Return current user info by access token (always load from DB)."""
     user = get_user(db, current_user["id"])
     if not user:
-        # Обычно это случается если ты сделал docker compose down -v (БД новая),
-        # а токен остался старый. Код здесь правильный: токен не может ссылаться на несуществующего юзера.
         raise HTTPException(status_code=404, detail="User not found")
     return user
 

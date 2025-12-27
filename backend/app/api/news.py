@@ -3,11 +3,13 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user, require_verified_author, resolve_news
 from app.db.session import get_db
 from app.schemas.news import NewsCreate, NewsRead, NewsUpdate
+from app.schemas.comment import CommentRead
 from app.crud.news import create_news, list_news, update_news, delete_news
+from app.crud.comments import list_comments
 from app.services.cache import cache_service
 from app.db.models import User, News
 from app.workers.tasks import send_news_notification
-from app.services.metrics import NEWS_CREATED
+from app.services.metrics import NEWS_CREATED, NOTIFICATIONS_SENT
 
 router = APIRouter(prefix="/news", tags=["news"])
 CACHE_TTL = 300
@@ -40,6 +42,14 @@ def get_one(news_id: int, db: Session = Depends(get_db)):
     return news_item
 
 
+@router.get("/{news_id}/comments", response_model=list[CommentRead])
+def list_news_comments(news_id: int, db: Session = Depends(get_db)):
+    news_item = db.query(News).filter(News.id == news_id).first()
+    if not news_item:
+        raise HTTPException(status_code=404, detail="Not found")
+    return list_comments(db, news_id)
+
+
 @router.post("/", response_model=NewsRead)
 def create(
     payload: NewsCreate,
@@ -57,8 +67,9 @@ def create(
         cache_service.set_json(key, True, ttl=3600)
         try:
             send_news_notification.delay(user.email, news_item.id)
-        except Exception:  # noqa: BLE001
+        except Exception:
             pass
+        NOTIFICATIONS_SENT.inc()
     return news_item
 
 
