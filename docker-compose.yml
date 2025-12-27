@@ -35,7 +35,6 @@ services:
       GITHUB_CLIENT_ID: Ov23liDqxPu4bjGARwC7
       GITHUB_CLIENT_SECRET: 6f282a5798aed4b4732fef276dbdfe8124535967
       LOG_FILE: /var/log/app/app.jsonl
-      # HAWK_TOKEN: ""  # optional
     depends_on:
       postgres:
         condition: service_healthy
@@ -57,7 +56,12 @@ services:
   celery_worker:
     build:
       context: ./backend
-    command: celery -A app.workers.tasks worker --loglevel=INFO
+    command: >
+      sh -c "
+      mkdir -p /var/log/app
+      && touch /var/log/app/notifications.log
+      && celery -A app.workers.tasks worker --loglevel=INFO
+      "
     environment:
       DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/news
       REDIS_URL: redis://redis:6379/0
@@ -73,7 +77,12 @@ services:
   celery_beat:
     build:
       context: ./backend
-    command: celery -A app.workers.tasks beat --loglevel=INFO
+    command: >
+      sh -c "
+      mkdir -p /var/log/app
+      && touch /var/log/app/notifications.log
+      && celery -A app.workers.tasks beat --loglevel=INFO
+      "
     environment:
       DATABASE_URL: postgresql+psycopg2://postgres:postgres@postgres:5432/news
       REDIS_URL: redis://redis:6379/0

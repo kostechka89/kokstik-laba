@@ -1,12 +1,20 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, Query, status
 from sqlalchemy.orm import Session
 from app.api.deps import get_current_user
 from app.db.session import get_db
 from app.schemas.comment import CommentCreate, CommentRead, CommentUpdate
-from app.crud.comments import create_comment, update_comment, delete_comment
+from app.crud.comments import create_comment, update_comment, delete_comment, list_by_news_id
 from app.db.models import Comment
 
 router = APIRouter(prefix="/comments", tags=["comments"])
+
+
+@router.get("/", response_model=list[CommentRead])
+def list_comments(
+    news_id: int = Query(...),
+    db: Session = Depends(get_db),
+):
+    return list_by_news_id(db, news_id=news_id)
 
 
 @router.post("/", response_model=CommentRead)

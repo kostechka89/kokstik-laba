@@ -10,6 +10,15 @@ class UserBase(BaseModel):
     is_admin: bool = False
 
 
+class UserPublic(BaseModel):
+    id: int
+    name: str
+    avatar: str | None = None
+
+    class Config:
+        from_attributes = True
+
+
 class UserCreate(UserBase):
     password: str
 

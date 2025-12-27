@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+from pathlib import Path
 from datetime import datetime, timedelta
 
 from celery import Celery
@@ -14,7 +15,6 @@ settings = get_settings()
 celery_app = Celery("worker", broker=settings.redis_url, backend=settings.redis_url)
 
 
-# Weekly digest every Sunday at 09:00 (server local time).
 celery_app.conf.beat_schedule = {
     "weekly-digest": {
         "task": "app.workers.tasks.send_weekly_digest_for_all",
@@ -24,7 +24,9 @@ celery_app.conf.beat_schedule = {
 
 
 logger = logging.getLogger("notifications")
-handler = logging.FileHandler("notifications.log")
+log_path = Path("/var/log/app/notifications.log")
+log_path.parent.mkdir(parents=True, exist_ok=True)
+handler = logging.FileHandler(log_path)
 logger.addHandler(handler)
 logger.setLevel(logging.INFO)
 
@@ -71,7 +73,6 @@ def send_weekly_digest_for_all(self):
         news_ids = [n.id for n in db.query(News).filter(News.published_at >= week_ago).all()]
 
         for user in users:
-            # one digest per user per week
             digest_key = f"digest:{now.date().isoformat()}:{user.id}"
             try:
                 from app.services.cache import cache_service
@@ -79,13 +80,12 @@ def send_weekly_digest_for_all(self):
                 if cache_service.get_json(digest_key):
                     continue
                 cache_service.set_json(digest_key, True, ttl=60 * 60 * 24 * 8)
-            except Exception:  # noqa: BLE001
+            except Exception:
                 pass
 
             try:
                 send_weekly_digest.delay(user.email, news_ids)
-            except Exception:  # noqa: BLE001
-                # Worker must not crash if broker is unavailable.
+            except Exception:
                 pass
     finally:
         db.close()

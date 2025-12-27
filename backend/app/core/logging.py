@@ -14,7 +14,6 @@ def configure_logging():
     root = logging.getLogger()
     root.setLevel(logging.INFO)
 
-    # Ensure at least one stdout handler exists
     if not any(isinstance(h, logging.StreamHandler) for h in root.handlers):
         sh = logging.StreamHandler()
         sh.setLevel(logging.INFO)
@@ -28,7 +27,6 @@ def configure_logging():
             fh.setLevel(logging.INFO)
             root.addHandler(fh)
         except Exception:
-            # Never crash app because of logging file issues
             pass
 
     structlog.configure(

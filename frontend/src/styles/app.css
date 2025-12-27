@@ -4,17 +4,16 @@ body {
   background: #f5f5f5;
 }
 
-/* лёгкий "снег" без JS */
 body::before {
   content: "";
   position: fixed;
   inset: 0;
   pointer-events: none;
   background-image:
-    radial-gradient(circle at 10% 10%, rgba(255,255,255,0.9) 0 2px, rgba(255,255,255,0) 3px),
-    radial-gradient(circle at 40% 30%, rgba(255,255,255,0.8) 0 1px, rgba(255,255,255,0) 2px),
-    radial-gradient(circle at 70% 20%, rgba(255,255,255,0.9) 0 2px, rgba(255,255,255,0) 3px),
-    radial-gradient(circle at 90% 40%, rgba(255,255,255,0.8) 0 1px, rgba(255,255,255,0) 2px);
+    radial-gradient(circle at 10% 10%, rgba(120,190,255,0.9) 0 2px, rgba(255,255,255,0) 3px),
+    radial-gradient(circle at 40% 30%, rgba(140,200,255,0.8) 0 1px, rgba(255,255,255,0) 2px),
+    radial-gradient(circle at 70% 20%, rgba(110,180,255,0.9) 0 2px, rgba(255,255,255,0) 3px),
+    radial-gradient(circle at 90% 40%, rgba(150,210,255,0.8) 0 1px, rgba(255,255,255,0) 2px);
   background-size: 300px 300px;
   animation: snowFall 14s linear infinite;
   opacity: 0.6;
@@ -33,6 +32,7 @@ body::before {
   background: #fff;
   text-decoration: none;
   color: #111;
+  cursor: pointer;
 }
 
 .oauth {
@@ -41,10 +41,50 @@ body::before {
 
 .header {
   display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: 16px;
   padding: 12px 20px;
   background: #fff;
   border-bottom: 1px solid #ddd;
+}
+
+.nav {
+  display: flex;
+  gap: 12px;
+}
+
+.auth {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.user {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.user-name {
+  font-weight: 600;
+}
+
+.badge {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: #eef3ff;
+  color: #1d3a8a;
+}
+
+.button.ghost {
+  background: transparent;
+}
+
+.button.danger {
+  border-color: #f2b8b5;
+  color: #a80000;
 }
 
 .container {
@@ -53,6 +93,14 @@ body::before {
   background: #fff;
   padding: 20px;
   border-radius: 6px;
+}
+
+.card {
+  background: #fafafa;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 20px;
 }
 
 .list {
@@ -65,6 +113,18 @@ body::before {
   border-bottom: 1px solid #eee;
 }
 
+.list-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.title {
+  font-weight: 600;
+  color: #222;
+}
+
 .meta {
   color: #666;
   font-size: 12px;
@@ -72,6 +132,26 @@ body::before {
 
 .error {
   color: crimson;
+}
+
+.notice {
+  background: #fff4d6;
+  border: 1px solid #f0e1b0;
+  padding: 12px;
+  border-radius: 6px;
+  margin-bottom: 16px;
+}
+
+.success {
+  color: #116329;
+  font-size: 14px;
+}
+
+.checkbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
 }
 
 .form {
@@ -87,4 +167,30 @@ textarea {
 .content {
   background: #fafafa;
   padding: 12px;
+  border-radius: 6px;
+  border: 1px solid #eee;
+}
+
+.detail-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.actions {
+  display: flex;
+  gap: 8px;
+}
+
+.comment {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.comment-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }

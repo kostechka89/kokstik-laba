@@ -20,6 +20,5 @@ def test_e2e_news_flow():
         browser = p.chromium.launch(headless=True)
         page = browser.new_page()
         page.goto(base, wait_until="domcontentloaded")
-        # We only check that the app shell is present.
         assert "News" in page.content() or "Новости" in page.content() or "LAB" in page.title()
         browser.close()
