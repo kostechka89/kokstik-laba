@@ -159,3 +159,8 @@ def metrics():
 @app.get("/debug/hawk-error")
 def hawk_error():
     raise RuntimeError("Hawk debug error")
+
+
+@app.get("/debug/boom")
+def debug_boom():
+    raise RuntimeError("Boom")

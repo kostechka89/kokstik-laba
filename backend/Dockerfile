@@ -19,6 +19,7 @@ RUN pip install --no-cache-dir -r /app/requirements-dev.txt
 COPY alembic.ini /app/alembic.ini
 COPY alembic /app/alembic
 COPY app /app/app
+COPY tests /app/tests
 COPY docs /app/docs
 
 # Logs (shared with logstash)
