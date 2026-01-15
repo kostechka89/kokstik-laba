@@ -35,39 +35,41 @@ export default function Register() {
   }
 
   return (
-    <section>
-      <h1>Регистрация</h1>
-      <p className="notice">
-        Эта форма нужна только для демонстрации работы ролей в учебном проекте. На реальном сайте
-        регистрация администратора через UI не используется.
-      </p>
-      <form onSubmit={onSubmit} className="form card">
-        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Имя" required />
-        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Пароль"
-          required
-        />
-        <label className="checkbox">
+    <section className="page auth-page">
+      <div className="auth-card">
+        <h1>Регистрация</h1>
+        <p className="notice">
+          Эта форма нужна только для демонстрации работы ролей в учебном проекте. На реальном сайте
+          регистрация администратора через UI не используется.
+        </p>
+        <form onSubmit={onSubmit} className="form">
+          <input value={name} onChange={(e) => setName(e.target.value)} placeholder="Имя" required />
+          <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
           <input
-            type="checkbox"
-            checked={isVerifiedAuthor}
-            onChange={(e) => setIsVerifiedAuthor(e.target.checked)}
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Пароль"
+            required
           />
-          Верифицированный автор
-        </label>
-        <label className="checkbox">
-          <input type="checkbox" checked={isAdmin} onChange={(e) => setIsAdmin(e.target.checked)} />
-          Администратор
-        </label>
-        <button type="submit" className="button">
-          Зарегистрироваться
-        </button>
-        {message && <p className={message.includes('создан') ? 'success' : 'error'}>{message}</p>}
-      </form>
+          <label className="checkbox">
+            <input
+              type="checkbox"
+              checked={isVerifiedAuthor}
+              onChange={(e) => setIsVerifiedAuthor(e.target.checked)}
+            />
+            Верифицированный автор
+          </label>
+          <label className="checkbox">
+            <input type="checkbox" checked={isAdmin} onChange={(e) => setIsAdmin(e.target.checked)} />
+            Администратор
+          </label>
+          <button type="submit" className="button">
+            Зарегистрироваться
+          </button>
+          {message && <p className={message.includes('создан') ? 'success' : 'error'}>{message}</p>}
+        </form>
+      </div>
     </section>
   )
 }

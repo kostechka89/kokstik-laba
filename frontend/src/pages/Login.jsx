@@ -44,28 +44,34 @@ export default function Login({ onAuth, currentUser }) {
   }
 
   return (
-    <section>
-      <h1>Авторизация</h1>
-      {currentUser && (
-        <div className="notice">
-          Вы уже вошли как <strong>{currentUser.name}</strong>. Можно выходить и заходить под другим пользователем.
-        </div>
-      )}
-      <form onSubmit={onSubmit} className="form">
-        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Пароль"
-        />
-        <button type="submit">Войти</button>
-      </form>
+    <section className="page auth-page">
+      <div className="auth-card">
+        <h1>Авторизация</h1>
+        {currentUser && (
+          <div className="notice">
+            Вы уже вошли как <strong>{currentUser.name}</strong>. Можно выходить и заходить под другим пользователем.
+          </div>
+        )}
+        <form onSubmit={onSubmit} className="form">
+          <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
+          <input
+            type="password"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
+            placeholder="Пароль"
+          />
+          <button type="submit" className="button">
+            Войти
+          </button>
+        </form>
 
-      <div className="oauth">
-        <a className="button" href={`${API_BASE}/auth/github`}>Войти через GitHub</a>
+        <div className="oauth">
+          <a className="button ghost" href={`${API_BASE}/auth/github`}>
+            Войти через GitHub
+          </a>
+        </div>
+        {message && <p className="meta">{message}</p>}
       </div>
-      {message && <p className="meta">{message}</p>}
     </section>
   )
 }

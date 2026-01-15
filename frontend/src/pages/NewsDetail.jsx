@@ -106,31 +106,50 @@ export default function NewsDetail({ currentUser }) {
     }
   }
 
+  const cover =
+    news?.cover ||
+    news?.cover_url ||
+    news?.image ||
+    'https://images.unsplash.com/photo-1524504388940-b1c1722653e1?auto=format&fit=crop&w=1200&q=80'
+
+  const formattedContent = useMemo(() => {
+    if (!news) return ''
+    if (typeof news.content === 'string') return news.content
+    if (news.content && typeof news.content === 'object') {
+      if (news.content.text) return news.content.text
+      if (news.content.description) return news.content.description
+    }
+    return JSON.stringify(news.content, null, 2)
+  }, [news])
+
   if (!news) {
     return <p>Загрузка...</p>
   }
 
   return (
-    <section>
-      <div className="detail-header">
-        <div>
+    <section className="page">
+      <div className="detail-hero">
+        <div className="detail-image" style={{ backgroundImage: `url(${cover})` }} />
+        <div className="detail-info">
           <h1>{news.title}</h1>
           <p className="meta">
             {new Date(news.published_at).toLocaleString()} ·{' '}
             {news.author ? news.author.name : `Автор #${news.author_id}`}
           </p>
+          <p className="detail-note">Быстрый факт: чай вкуснее, когда читаешь свежие новости.</p>
+          {canEditNews && (
+            <div className="actions">
+              <button type="button" className="button ghost" onClick={() => setIsEditing((prev) => !prev)}>
+                {isEditing ? 'Отмена' : 'Редактировать'}
+              </button>
+              <button type="button" className="button danger" onClick={deleteNews}>
+                Удалить
+              </button>
+            </div>
+          )}
         </div>
-        {canEditNews && (
-          <div className="actions">
-            <button type="button" className="button ghost" onClick={() => setIsEditing((prev) => !prev)}>
-              {isEditing ? 'Отмена' : 'Редактировать'}
-            </button>
-            <button type="button" className="button danger" onClick={deleteNews}>
-              Удалить
-            </button>
-          </div>
-        )}
       </div>
+
       {isEditing ? (
         <form onSubmit={submitNewsUpdate} className="form card">
           <input value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -140,8 +159,11 @@ export default function NewsDetail({ currentUser }) {
           </button>
         </form>
       ) : (
-        <pre className="content">{JSON.stringify(news.content, null, 2)}</pre>
+        <div className="content-block">
+          <p>{formattedContent}</p>
+        </div>
       )}
+
       <h2>Комментарии</h2>
       <ul className="list">
         {comments.map((comment) => (
@@ -183,6 +205,7 @@ export default function NewsDetail({ currentUser }) {
           </li>
         ))}
       </ul>
+
       {currentUser ? (
         <form onSubmit={submitComment} className="form card">
           <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Комментарий" />

@@ -10,6 +10,7 @@ import './styles/app.css'
 export default function App() {
   const [currentUser, setCurrentUser] = useState(null)
   const [authError, setAuthError] = useState('')
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const loadCurrentUser = async () => {
     if (!getToken()) {
@@ -36,15 +37,39 @@ export default function App() {
     setCurrentUser(null)
   }
 
+  const toggleMenu = () => {
+    setMenuOpen((prev) => !prev)
+  }
+
   return (
     <BrowserRouter>
       <header className="header">
-        <div className="nav">
-          <Link to="/" className="brand">
-            <span className="brand-icon">📰</span>
-            Новости
+        <div className="header-left">
+          <Link to="/" className="brand" onClick={() => setMenuOpen(false)}>
+            <span className="brand-icon">💗</span>
+            <span>
+              Gossip Garden
+              <span className="brand-subtitle">новости с конфетти</span>
+            </span>
           </Link>
+          <button type="button" className="menu-toggle" onClick={toggleMenu}>
+            {menuOpen ? 'Свернуть' : 'Меню'}
+          </button>
         </div>
+        <nav className={`nav ${menuOpen ? 'open' : ''}`}>
+          <Link to="/" className="nav-link" onClick={() => setMenuOpen(false)}>
+            Лента
+          </Link>
+          <Link to="/login" className="nav-link" onClick={() => setMenuOpen(false)}>
+            Вход
+          </Link>
+          <Link to="/register" className="nav-link" onClick={() => setMenuOpen(false)}>
+            Регистрация
+          </Link>
+          <a href="#feedback" className="nav-link" onClick={() => setMenuOpen(false)}>
+            Обратная связь
+          </a>
+        </nav>
         <div className="auth">
           {currentUser ? (
             <>
@@ -59,14 +84,7 @@ export default function App() {
               </button>
             </>
           ) : (
-            <>
-              <Link to="/login" className="button">
-                Войти
-              </Link>
-              <Link to="/register" className="button ghost">
-                Регистрация
-              </Link>
-            </>
+            <div className="auth-guest">Гостья, добро пожаловать ✨</div>
           )}
         </div>
       </header>
@@ -79,6 +97,15 @@ export default function App() {
           <Route path="/register" element={<Register />} />
         </Routes>
       </main>
+      <footer className="footer">
+        <div className="footer-inner">
+          <div>
+            <h3>Сделана работа Федотовой Анастасией</h3>
+            <p>Новости бывают серьезными, но дизайн может быть мягким.</p>
+          </div>
+          <div className="footer-note">© 2024 Gossip Garden</div>
+        </div>
+      </footer>
     </BrowserRouter>
   )
 }
