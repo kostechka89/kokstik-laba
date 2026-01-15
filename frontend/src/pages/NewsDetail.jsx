@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, Link } from 'react-router-dom'
 import { apiFetch } from '../api/client.js'
+import detailImage from '../assets/detail.svg'
 
 export default function NewsDetail({ currentUser }) {
   const { id } = useParams()
@@ -111,26 +112,32 @@ export default function NewsDetail({ currentUser }) {
   }
 
   return (
-    <section>
-      <div className="detail-header">
+    <section className="detail">
+      <div className="detail-hero">
         <div>
+          <Link to="/" className="back-link">
+            ← К списку новостей
+          </Link>
           <h1>{news.title}</h1>
-          <p className="meta">
+          <p className="news-meta">
             {new Date(news.published_at).toLocaleString()} ·{' '}
             {news.author ? news.author.name : `Автор #${news.author_id}`}
           </p>
         </div>
-        {canEditNews && (
-          <div className="actions">
-            <button type="button" className="button ghost" onClick={() => setIsEditing((prev) => !prev)}>
-              {isEditing ? 'Отмена' : 'Редактировать'}
-            </button>
-            <button type="button" className="button danger" onClick={deleteNews}>
-              Удалить
-            </button>
-          </div>
-        )}
+        <img src={detailImage} alt="Иллюстрация новости" />
       </div>
+
+      {canEditNews && (
+        <div className="actions">
+          <button type="button" className="button ghost" onClick={() => setIsEditing((prev) => !prev)}>
+            {isEditing ? 'Отмена' : 'Редактировать'}
+          </button>
+          <button type="button" className="button danger" onClick={deleteNews}>
+            Удалить
+          </button>
+        </div>
+      )}
+
       {isEditing ? (
         <form onSubmit={submitNewsUpdate} className="form card">
           <input value={title} onChange={(e) => setTitle(e.target.value)} />
@@ -140,16 +147,21 @@ export default function NewsDetail({ currentUser }) {
           </button>
         </form>
       ) : (
-        <pre className="content">{JSON.stringify(news.content, null, 2)}</pre>
+        <pre className="json-content">{JSON.stringify(news.content, null, 2)}</pre>
       )}
-      <h2>Комментарии</h2>
-      <ul className="list">
+
+      <div className="section-heading">
+        <h2>Комментарии</h2>
+        <span className="pill">Всего: {comments.length}</span>
+      </div>
+
+      <div className="comment-grid">
         {comments.map((comment) => (
-          <li key={comment.id} className="comment">
-            <div className="comment-body">
+          <article key={comment.id} className="comment-card">
+            <div>
               <div className="comment-meta">
-                {comment.author ? comment.author.name : `Автор #${comment.author_id}`}
-                <span className="meta">{new Date(comment.published_at).toLocaleString()}</span>
+                <strong>{comment.author ? comment.author.name : `Автор #${comment.author_id}`}</strong>
+                <span className="muted">{new Date(comment.published_at).toLocaleString()}</span>
               </div>
               {editingCommentId === comment.id ? (
                 <textarea
@@ -180,9 +192,10 @@ export default function NewsDetail({ currentUser }) {
                 </button>
               </div>
             )}
-          </li>
+          </article>
         ))}
-      </ul>
+      </div>
+
       {currentUser ? (
         <form onSubmit={submitComment} className="form card">
           <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Комментарий" />
@@ -193,6 +206,7 @@ export default function NewsDetail({ currentUser }) {
       ) : (
         <p className="notice">Войдите, чтобы оставить комментарий.</p>
       )}
+
       {error && <p className="error">{error}</p>}
     </section>
   )
