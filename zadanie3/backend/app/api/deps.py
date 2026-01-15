@@ -2,6 +2,7 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from jose import JWTError, jwt
 from sqlalchemy.orm import Session
+import structlog
 from app.core.config import get_settings
 from app.db.session import get_db
 from app.crud.users import get_user
@@ -10,6 +11,7 @@ from app.db.models import News
 
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/auth/login")
+logger = structlog.get_logger()
 
 
 def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_scheme)):
@@ -21,7 +23,9 @@ def get_current_user(db: Session = Depends(get_db), token: str = Depends(oauth2_
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid token")
     cached = cache_service.get_json(f"user:{user_id}")
     if cached:
+        logger.info("cache_hit", cache="user", key=f"user:{user_id}")
         return cached
+    logger.info("cache_miss", cache="user", key=f"user:{user_id}")
     user = get_user(db, user_id)
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
