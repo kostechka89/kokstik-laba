@@ -1,12 +1,20 @@
 import { useEffect, useMemo, useState } from 'react'
 import { Link } from 'react-router-dom'
 import { apiFetch } from '../api/client.js'
+import heroImage from '../assets/hero-news.svg'
+import coverOne from '../assets/cover-1.svg'
+import coverTwo from '../assets/cover-2.svg'
+import coverThree from '../assets/cover-3.svg'
+
+const coverOptions = [coverOne, coverTwo, coverThree]
 
 export default function Home({ currentUser }) {
   const [news, setNews] = useState([])
   const [error, setError] = useState('')
   const [title, setTitle] = useState('')
-  const [content, setContent] = useState('{\n  "text": ""\n}')
+  const [content, setContent] = useState('{
+  "text": ""
+}')
   const [formError, setFormError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -35,7 +43,9 @@ export default function Home({ currentUser }) {
       })
       setNews((prev) => [created, ...prev])
       setTitle('')
-      setContent('{\n  "text": ""\n}')
+      setContent('{
+  "text": ""
+}')
     } catch (err) {
       setFormError(err.message)
     } finally {
@@ -44,22 +54,60 @@ export default function Home({ currentUser }) {
   }
 
   return (
-    <section>
-      <h1>Новости</h1>
+    <section className="page">
+      <div className="hero">
+        <div className="hero-content">
+          <h1>Лента лабораторных новостей</h1>
+          <p>
+            Платформа показывает новости, роли авторов и работу с комментариями. Авторизуйтесь,
+            чтобы управлять публикациями и оставлять обсуждения.
+          </p>
+          <div className="hero-actions">
+            <Link to="/login" className="button">
+              Авторизоваться
+            </Link>
+            <Link to="/register" className="button ghost">
+              Создать аккаунт
+            </Link>
+          </div>
+        </div>
+        <img src={heroImage} alt="Иллюстрация новостей" className="hero-image" />
+      </div>
+
+      <div className="stats">
+        <div className="stat-card">
+          <span className="stat-value">{news.length}</span>
+          <span className="stat-label">Всего новостей</span>
+        </div>
+        <div className="stat-card">
+          <span className="stat-value">{news.filter((item) => item.comments_count).length}</span>
+          <span className="stat-label">Новости с комментариями</span>
+        </div>
+        <div className="stat-card">
+          <span className="stat-value">{currentUser ? 'В сети' : 'Гость'}</span>
+          <span className="stat-label">Статус пользователя</span>
+        </div>
+      </div>
+
       {canCreateNews ? (
-        <form onSubmit={submitNews} className="card form">
-          <h2>Создать новость</h2>
-          <input
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="Заголовок"
-            required
-          />
-          <textarea
-            value={content}
-            onChange={(e) => setContent(e.target.value)}
-            placeholder='{"text":"..."}'
-          />
+        <form onSubmit={submitNews} className="card form create-panel">
+          <div>
+            <h2>Создать новость</h2>
+            <p className="muted">Введите заголовок и JSON-контент.</p>
+          </div>
+          <div className="form-grid">
+            <input
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              placeholder="Заголовок"
+              required
+            />
+            <textarea
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              placeholder='{"text":"..."}'
+            />
+          </div>
           {formError && <p className="error">{formError}</p>}
           <button type="submit" className="button" disabled={isSubmitting}>
             {isSubmitting ? 'Публикуем...' : 'Опубликовать'}
@@ -72,24 +120,32 @@ export default function Home({ currentUser }) {
             : 'Войдите в систему, чтобы оставлять комментарии и создавать новости.'}
         </p>
       )}
+
       {error && <p className="error">{error}</p>}
-      <ul className="list">
-        {news.map((item) => (
-          <li key={item.id}>
-            <div className="list-row">
-              <div>
-                <Link to={`/news/${item.id}`} className="title">
-                  {item.title}
-                </Link>
-                <div className="meta">
-                  {item.author ? `Автор: ${item.author.name}` : `Автор #${item.author_id}`}
-                </div>
-              </div>
-              <span className="meta">{new Date(item.published_at).toLocaleString()}</span>
+
+      <div className="news-grid">
+        {news.map((item, index) => (
+          <article className="news-card" key={item.id}>
+            <img
+              src={coverOptions[index % coverOptions.length]}
+              alt="Обложка новости"
+              className="news-cover"
+            />
+            <div className="news-body">
+              <Link to={`/news/${item.id}`} className="title">
+                {item.title}
+              </Link>
+              <p className="meta">
+                {item.author ? `Автор: ${item.author.name}` : `Автор #${item.author_id}`}
+              </p>
+              <p className="meta">{new Date(item.published_at).toLocaleString()}</p>
+              <Link to={`/news/${item.id}`} className="button ghost">
+                Читать
+              </Link>
             </div>
-          </li>
+          </article>
         ))}
-      </ul>
+      </div>
     </section>
   )
 }
