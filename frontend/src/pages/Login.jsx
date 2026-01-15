@@ -34,7 +34,7 @@ export default function Login({ onAuth, currentUser }) {
     try {
       const data = await apiFetch('/auth/login', {
         method: 'POST',
-        body: JSON.stringify({ email, password }),
+        body: JSON.stringify({ email: email.trim().toLowerCase(), password }),
       })
       setTokens({ accessToken: data.access_token, refreshToken: data.refresh_token })
       setMessage('Успешно')

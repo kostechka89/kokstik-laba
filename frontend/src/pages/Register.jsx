@@ -18,7 +18,7 @@ export default function Register() {
         method: 'POST',
         body: JSON.stringify({
           name,
-          email,
+          email: email.trim().toLowerCase(),
           password,
           is_verified_author: isVerifiedAuthor,
           is_admin: isAdmin,
