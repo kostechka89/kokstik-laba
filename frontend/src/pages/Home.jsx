@@ -12,9 +12,9 @@ export default function Home({ currentUser }) {
   const [news, setNews] = useState([])
   const [error, setError] = useState('')
   const [title, setTitle] = useState('')
-  const [content, setContent] = useState('{
+  const [content, setContent] = useState(`{
   "text": ""
-}')
+}`)
   const [formError, setFormError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
 
@@ -43,9 +43,9 @@ export default function Home({ currentUser }) {
       })
       setNews((prev) => [created, ...prev])
       setTitle('')
-      setContent('{
+      setContent(`{
   "text": ""
-}')
+}`)
     } catch (err) {
       setFormError(err.message)
     } finally {
