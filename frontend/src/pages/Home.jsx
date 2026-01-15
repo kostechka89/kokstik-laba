@@ -10,9 +10,7 @@ export default function Home({ currentUser }) {
   const [news, setNews] = useState([])
   const [error, setError] = useState('')
   const [title, setTitle] = useState('')
-  const [content, setContent] = useState('{
-  "text": ""
-}')
+  const [content, setContent] = useState(JSON.stringify({ text: '' }, null, 2))
   const [formError, setFormError] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [feedbackName, setFeedbackName] = useState('')
@@ -60,9 +58,7 @@ export default function Home({ currentUser }) {
       })
       setNews((prev) => [created, ...prev])
       setTitle('')
-      setContent('{
-  "text": ""
-}')
+      setContent(JSON.stringify({ text: '' }, null, 2))
     } catch (err) {
       setFormError(err.message)
     } finally {
