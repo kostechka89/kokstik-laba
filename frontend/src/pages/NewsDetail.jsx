@@ -1,6 +1,18 @@
 import { useEffect, useMemo, useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { Link, useNavigate, useParams } from 'react-router-dom'
 import { apiFetch } from '../api/client.js'
+import coverOne from '../assets/cover-1.svg'
+import coverTwo from '../assets/cover-2.svg'
+import coverThree from '../assets/cover-3.svg'
+
+const coverOptions = [coverOne, coverTwo, coverThree]
+
+const formatContent = (content) => {
+  if (!content) return ''
+  if (typeof content === 'string') return content
+  if (content.text) return content.text
+  return JSON.stringify(content, null, 2)
+}
 
 export default function NewsDetail({ currentUser }) {
   const { id } = useParams()
@@ -111,14 +123,23 @@ export default function NewsDetail({ currentUser }) {
   }
 
   return (
-    <section>
-      <div className="detail-header">
+    <section className="page">
+      <Link to="/" className="button ghost back-link">
+        Назад к ленте
+      </Link>
+      <div className="news-hero">
+        <img
+          src={coverOptions[news.id % coverOptions.length]}
+          alt="Обложка новости"
+          className="news-hero-cover"
+        />
         <div>
           <h1>{news.title}</h1>
           <p className="meta">
             {new Date(news.published_at).toLocaleString()} ·{' '}
             {news.author ? news.author.name : `Автор #${news.author_id}`}
           </p>
+          <p className="muted">ID новости: {news.id}</p>
         </div>
         {canEditNews && (
           <div className="actions">
@@ -140,59 +161,64 @@ export default function NewsDetail({ currentUser }) {
           </button>
         </form>
       ) : (
-        <pre className="content">{JSON.stringify(news.content, null, 2)}</pre>
+        <div className="content-card">
+          <p>{formatContent(news.content)}</p>
+        </div>
       )}
-      <h2>Комментарии</h2>
-      <ul className="list">
-        {comments.map((comment) => (
-          <li key={comment.id} className="comment">
-            <div className="comment-body">
-              <div className="comment-meta">
-                {comment.author ? comment.author.name : `Автор #${comment.author_id}`}
-                <span className="meta">{new Date(comment.published_at).toLocaleString()}</span>
-              </div>
-              {editingCommentId === comment.id ? (
-                <textarea
-                  value={editingCommentText}
-                  onChange={(e) => setEditingCommentText(e.target.value)}
-                />
-              ) : (
-                <p>{comment.text}</p>
-              )}
-            </div>
-            {currentUser && (currentUser.is_admin || currentUser.id === comment.author_id) && (
-              <div className="actions">
+
+      <section className="comments">
+        <h2>Комментарии</h2>
+        <ul className="list">
+          {comments.map((comment) => (
+            <li key={comment.id} className="comment">
+              <div className="comment-body">
+                <div className="comment-meta">
+                  {comment.author ? comment.author.name : `Автор #${comment.author_id}`}
+                  <span className="meta">{new Date(comment.published_at).toLocaleString()}</span>
+                </div>
                 {editingCommentId === comment.id ? (
-                  <button
-                    type="button"
-                    className="button ghost"
-                    onClick={() => submitCommentUpdate(comment.id)}
-                  >
-                    Сохранить
-                  </button>
+                  <textarea
+                    value={editingCommentText}
+                    onChange={(e) => setEditingCommentText(e.target.value)}
+                  />
                 ) : (
-                  <button type="button" className="button ghost" onClick={() => startEditComment(comment)}>
-                    Редактировать
-                  </button>
+                  <p>{comment.text}</p>
                 )}
-                <button type="button" className="button danger" onClick={() => deleteComment(comment.id)}>
-                  Удалить
-                </button>
               </div>
-            )}
-          </li>
-        ))}
-      </ul>
-      {currentUser ? (
-        <form onSubmit={submitComment} className="form card">
-          <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Комментарий" />
-          <button type="submit" className="button">
-            Отправить
-          </button>
-        </form>
-      ) : (
-        <p className="notice">Войдите, чтобы оставить комментарий.</p>
-      )}
+              {currentUser && (currentUser.is_admin || currentUser.id === comment.author_id) && (
+                <div className="actions">
+                  {editingCommentId === comment.id ? (
+                    <button
+                      type="button"
+                      className="button ghost"
+                      onClick={() => submitCommentUpdate(comment.id)}
+                    >
+                      Сохранить
+                    </button>
+                  ) : (
+                    <button type="button" className="button ghost" onClick={() => startEditComment(comment)}>
+                      Редактировать
+                    </button>
+                  )}
+                  <button type="button" className="button danger" onClick={() => deleteComment(comment.id)}>
+                    Удалить
+                  </button>
+                </div>
+              )}
+            </li>
+          ))}
+        </ul>
+        {currentUser ? (
+          <form onSubmit={submitComment} className="form card">
+            <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder="Комментарий" />
+            <button type="submit" className="button">
+              Отправить
+            </button>
+          </form>
+        ) : (
+          <p className="notice">Войдите, чтобы оставить комментарий.</p>
+        )}
+      </section>
       {error && <p className="error">{error}</p>}
     </section>
   )
