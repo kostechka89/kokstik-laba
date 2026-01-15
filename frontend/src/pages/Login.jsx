@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { apiFetch, setTokens } from '../api/client.js'
+import authImage from '../assets/auth.svg'
 
 const API_BASE = import.meta.env.VITE_API_URL || 'http://localhost:8000'
 
@@ -44,28 +45,41 @@ export default function Login({ onAuth, currentUser }) {
   }
 
   return (
-    <section>
-      <h1>Авторизация</h1>
-      {currentUser && (
-        <div className="notice">
-          Вы уже вошли как <strong>{currentUser.name}</strong>. Можно выходить и заходить под другим пользователем.
+    <section className="auth-page">
+      <div className="card auth-card">
+        <div>
+          <p className="eyebrow">Доступ к системе</p>
+          <h1>Авторизация</h1>
+          <p className="muted">
+            Вход открывает возможность оставлять комментарии и управлять новостями в зависимости от роли.
+          </p>
+          {currentUser && (
+            <div className="notice">
+              Вы уже вошли как <strong>{currentUser.name}</strong>. Можно выйти и войти под другим пользователем.
+            </div>
+          )}
+          <form onSubmit={onSubmit} className="form">
+            <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" required />
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Пароль"
+              required
+            />
+            <button type="submit" className="button">
+              Войти
+            </button>
+          </form>
+          <div className="oauth">
+            <a className="button ghost" href={`${API_BASE}/auth/github`}>
+              Войти через GitHub
+            </a>
+          </div>
+          {message && <p className="meta">{message}</p>}
         </div>
-      )}
-      <form onSubmit={onSubmit} className="form">
-        <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="Email" />
-        <input
-          type="password"
-          value={password}
-          onChange={(e) => setPassword(e.target.value)}
-          placeholder="Пароль"
-        />
-        <button type="submit">Войти</button>
-      </form>
-
-      <div className="oauth">
-        <a className="button" href={`${API_BASE}/auth/github`}>Войти через GitHub</a>
+        <img src={authImage} alt="Иллюстрация авторизации" />
       </div>
-      {message && <p className="meta">{message}</p>}
     </section>
   )
 }
