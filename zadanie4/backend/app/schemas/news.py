@@ -1,0 +1,29 @@
+from datetime import datetime
+from pydantic import BaseModel
+from app.schemas.user import UserPublic
+
+
+class NewsBase(BaseModel):
+    title: str
+    content: dict
+    cover: str | None = None
+
+
+class NewsCreate(NewsBase):
+    pass
+
+
+class NewsUpdate(BaseModel):
+    title: str | None = None
+    content: dict | None = None
+    cover: str | None = None
+
+
+class NewsRead(NewsBase):
+    id: int
+    published_at: datetime
+    author_id: int
+    author: UserPublic | None = None
+
+    class Config:
+        from_attributes = True
