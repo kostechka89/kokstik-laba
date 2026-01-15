@@ -1,0 +1,17 @@
+fastapi
+uvicorn
+sqlalchemy
+psycopg2-binary
+alembic
+python-jose
+passlib[argon2]
+python-multipart
+redis
+celery
+prometheus-client
+structlog
+hawk-python-sdk
+pydantic
+pydantic-settings
+httpx
+fastapi-sso

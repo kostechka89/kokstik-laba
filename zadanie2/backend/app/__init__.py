@@ -1,0 +1,1 @@
+"""News backend app."""
