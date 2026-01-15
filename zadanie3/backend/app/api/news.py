@@ -1,5 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.concurrency import run_in_threadpool
 from sqlalchemy.orm import Session
+import structlog
 from app.api.deps import get_current_user, require_verified_author, resolve_news
 from app.db.session import get_db
 from app.schemas.news import NewsCreate, NewsRead, NewsUpdate
@@ -13,6 +15,7 @@ from app.services.metrics import NEWS_CREATED, NOTIFICATIONS_SENT
 
 router = APIRouter(prefix="/news", tags=["news"])
 CACHE_TTL = 300
+logger = structlog.get_logger()
 
 
 def _news_cache_key(news_id: int) -> str:
@@ -20,22 +23,26 @@ def _news_cache_key(news_id: int) -> str:
 
 
 @router.get("/", response_model=list[NewsRead])
-def list_all(db: Session = Depends(get_db)):
+async def list_all(db: Session = Depends(get_db)):
     cached = cache_service.get_json("news:all")
     if cached:
+        logger.info("cache_hit", cache="news", key="news:all")
         return cached
-    news_items = list_news(db)
+    logger.info("cache_miss", cache="news", key="news:all")
+    news_items = await run_in_threadpool(list_news, db)
     data = [NewsRead.model_validate(item).model_dump() for item in news_items]
     cache_service.set_json("news:all", data, CACHE_TTL)
     return news_items
 
 
 @router.get("/{news_id}", response_model=NewsRead)
-def get_one(news_id: int, db: Session = Depends(get_db)):
+async def get_one(news_id: int, db: Session = Depends(get_db)):
     cached = cache_service.get_json(_news_cache_key(news_id))
     if cached:
+        logger.info("cache_hit", cache="news", key=_news_cache_key(news_id))
         return cached
-    news_item = db.query(News).filter(News.id == news_id).first()
+    logger.info("cache_miss", cache="news", key=_news_cache_key(news_id))
+    news_item = await run_in_threadpool(lambda: db.query(News).filter(News.id == news_id).first())
     if not news_item:
         raise HTTPException(status_code=404, detail="Not found")
     cache_service.set_json(_news_cache_key(news_id), NewsRead.model_validate(news_item).model_dump(), CACHE_TTL)
@@ -43,23 +50,23 @@ def get_one(news_id: int, db: Session = Depends(get_db)):
 
 
 @router.get("/{news_id}/comments", response_model=list[CommentRead])
-def list_news_comments(news_id: int, db: Session = Depends(get_db)):
-    news_item = db.query(News).filter(News.id == news_id).first()
+async def list_news_comments(news_id: int, db: Session = Depends(get_db)):
+    news_item = await run_in_threadpool(lambda: db.query(News).filter(News.id == news_id).first())
     if not news_item:
         raise HTTPException(status_code=404, detail="Not found")
-    return list_comments(db, news_id)
+    return await run_in_threadpool(list_comments, db, news_id)
 
 
 @router.post("/", response_model=NewsRead)
-def create(
+async def create(
     payload: NewsCreate,
     current_user=Depends(require_verified_author),
     db: Session = Depends(get_db),
 ):
-    news_item = create_news(db, current_user["id"], payload)
+    news_item = await run_in_threadpool(create_news, db, current_user["id"], payload)
     NEWS_CREATED.inc()
     cache_service.delete("news:all")
-    users = db.query(User).all()
+    users = await run_in_threadpool(lambda: db.query(User).all())
     for user in users:
         key = f"notification:{news_item.id}:{user.id}"
         if cache_service.get_json(key):
@@ -74,7 +81,7 @@ def create(
 
 
 @router.patch("/{news_id}", response_model=NewsRead)
-def update(
+async def update(
     payload: NewsUpdate,
     current_user=Depends(get_current_user),
     news_item=Depends(resolve_news),
@@ -82,21 +89,21 @@ def update(
 ):
     if not (current_user["is_admin"] or news_item.author_id == current_user["id"]):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
-    updated = update_news(db, news_item, payload)
+    updated = await run_in_threadpool(update_news, db, news_item, payload)
     cache_service.delete("news:all")
     cache_service.delete(_news_cache_key(news_item.id))
     return updated
 
 
 @router.delete("/{news_id}")
-def delete(
+async def delete(
     current_user=Depends(get_current_user),
     news_item=Depends(resolve_news),
     db: Session = Depends(get_db),
 ):
     if not (current_user["is_admin"] or news_item.author_id == current_user["id"]):
         raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Forbidden")
-    delete_news(db, news_item)
+    await run_in_threadpool(delete_news, db, news_item)
     cache_service.delete("news:all")
     cache_service.delete(_news_cache_key(news_item.id))
     return {"status": "deleted"}
