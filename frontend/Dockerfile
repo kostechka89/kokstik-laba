@@ -1,12 +1,13 @@
 FROM node:20-alpine
 WORKDIR /app
+ENV NPM_CONFIG_REGISTRY=https://registry.npmjs.org/ \
+  NPM_CONFIG_PROGRESS=false \
+  NPM_CONFIG_FETCH_RETRIES=5 \
+  NPM_CONFIG_FETCH_RETRY_MINTIMEOUT=20000 \
+  NPM_CONFIG_FETCH_RETRY_MAXTIMEOUT=120000 \
+  NPM_CONFIG_FETCH_TIMEOUT=600000
 COPY package.json package-lock.json* ./
-RUN npm config set registry https://registry.npmjs.org/ \
-  && npm config set progress false \
-  && npm config set fetch-retries 5 \
-  && npm config set fetch-retry-mintimeout 20000 \
-  && npm config set fetch-retry-maxtimeout 120000 \
-  && npm install --no-fund --no-audit
+RUN if [ -f package-lock.json ]; then npm ci --no-fund --no-audit; else npm install --no-fund --no-audit; fi
 COPY . ./
 EXPOSE 5173
 CMD ["npm", "run", "dev", "--", "--host", "0.0.0.0", "--port", "5173"]
