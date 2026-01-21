@@ -1,0 +1,131 @@
+.obolochka {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 48px 24px 64px;
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+}
+
+.shapka {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.shapka h1 {
+  margin: 0;
+  font-size: 32px;
+}
+
+.shapka p {
+  margin: 4px 0 0;
+  color: #94a3b8;
+}
+
+.znak {
+  width: 56px;
+  height: 56px;
+  border-radius: 16px;
+  display: grid;
+  place-items: center;
+  background: rgba(56, 189, 248, 0.2);
+  border: 1px solid rgba(56, 189, 248, 0.5);
+  font-size: 20px;
+}
+
+.panel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 24px;
+}
+
+.karta {
+  background: rgba(15, 23, 42, 0.6);
+  border-radius: 20px;
+  padding: 24px;
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  box-shadow: 0 20px 60px rgba(15, 23, 42, 0.4);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.karta h2 {
+  margin: 0;
+}
+
+.forma {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.forma label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-size: 14px;
+  color: #cbd5f5;
+}
+
+.stroka-knopok {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.status {
+  padding: 12px;
+  background: rgba(56, 189, 248, 0.15);
+  border-radius: 12px;
+  color: #bae6fd;
+}
+
+.oshibki {
+  margin: 0;
+  padding: 12px 16px;
+  list-style: none;
+  background: rgba(248, 113, 113, 0.15);
+  border-radius: 12px;
+  color: #fecaca;
+  display: grid;
+  gap: 6px;
+}
+
+.posledniy {
+  font-size: 14px;
+  color: #e2e8f0;
+}
+
+.pravila {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.pravila h3 {
+  margin: 0;
+}
+
+.pravila-setka {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 12px;
+}
+
+.chips {
+  padding: 10px 14px;
+  border-radius: 999px;
+  background: rgba(148, 163, 184, 0.15);
+  border: 1px dashed rgba(148, 163, 184, 0.4);
+  font-size: 13px;
+}
+
+.niz {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  font-size: 12px;
+  color: #94a3b8;
+}
