@@ -60,6 +60,14 @@ async def dashboard_data():
             "avg_volatility": engine.state.avg_volatility,
             "preset": engine.state.preset,
         },
+        "scanner": {
+            "last_scan_at": engine.state.last_scan_at,
+            "last_error": engine.state.last_error,
+            "scanned_symbols": engine.state.scanned_symbols,
+            "liquid_symbols": engine.state.liquid_symbols,
+            "ready_candidates": engine.state.ready_candidates,
+            "scan_interval_sec": settings.scan_interval_sec,
+        },
     }
 
 

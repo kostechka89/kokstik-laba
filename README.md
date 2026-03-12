@@ -156,3 +156,20 @@ curl -X POST http://localhost:8000/api/preset \
 ## Ограничения текущей версии
 - Funding / Open Interest / Binance cross-check пока не подключены (можно добавить отдельным модулем).
 - Бэктест-оценка хранится как основа в журнале сигналов, без отдельного отчётного движка first-touch статистики.
+
+
+## Почему таблицы могут быть пустыми
+Это обычно не баг UI. Частые причины:
+- нет подходящих условий рынка под выбранный пресет (особенно `ULTRA-STRICT`);
+- слишком жесткие фильтры ликвидности (`MIN_24H_VOLUME_USDT`, `MAX_PRICE`, `PAIR_LIMIT`);
+- недоступен MEXC API из среды запуска (сеть, DNS, proxy);
+- нет новых сигналов после anti-spam/cooldown фильтров.
+
+Проверяйте блок **Scanner Status** в панели 4:
+- `Liquid pairs`, `Scanned pairs`, `Ready candidates`;
+- `Last error` (если не `none`, там будет причина).
+
+Для более частых сигналов попробуйте:
+- `POST /api/preset` → `FLOW`;
+- уменьшить `MIN_24H_VOLUME_USDT`;
+- увеличить `PAIR_LIMIT`.

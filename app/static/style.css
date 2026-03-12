@@ -9,3 +9,5 @@ th, td { border-bottom: 1px solid #23385d; padding: 6px; text-align: left; verti
 .green { color: #3ad47f; }
 .red { color: #ff7a7a; }
 .badge { padding: 2px 6px; border-radius: 999px; background: #213357; font-size: 11px; }
+
+.muted { color: #9ab0cf; }
