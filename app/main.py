@@ -21,7 +21,7 @@ app = FastAPI(title="MEXC Pump Reversal Short Dashboard")
 app.mount("/static", StaticFiles(directory="app/static"), name="static")
 templates = Jinja2Templates(directory="app/templates")
 
-storage = Storage()
+storage = Storage(settings.db_path)
 client = MexcClient(settings.mexc_base_url)
 alerter = TelegramAlerter(settings.telegram_token, settings.telegram_chat_id)
 engine = SignalEngine(client, storage, alerter)

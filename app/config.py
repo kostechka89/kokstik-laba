@@ -36,6 +36,7 @@ class Settings:
     vr_max_filter: float = field(default_factory=lambda: float(os.getenv("VR_MAX_FILTER", "5.8")))
     ret15_max_filter: float = field(default_factory=lambda: float(os.getenv("RET15_MAX_FILTER", "15.0")))
     telegram_token: str | None = field(default_factory=lambda: os.getenv("TELEGRAM_BOT_TOKEN"))
+    db_path: str = field(default_factory=lambda: os.getenv("DB_PATH", "signals.db"))
     telegram_chat_id: str | None = field(default_factory=lambda: os.getenv("TELEGRAM_CHAT_ID"))
 
 
