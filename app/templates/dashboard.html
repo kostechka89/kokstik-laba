@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>MEXC SHORT Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Real-Time MEXC SHORT Dashboard</h1>
+    <div>
+      <label>Preset</label>
+      <select id="preset">
+        {% for p in presets %}
+        <option {% if p == preset %}selected{% endif %}>{{ p }}</option>
+        {% endfor %}
+      </select>
+    </div>
+  </header>
+
+  <section class="grid">
+    <div class="panel">
+      <h2>1) Top Signals (Live)</h2>
+      <table id="topTable"><thead><tr><th>Symbol</th><th>Setup</th><th>Entry</th><th>SL</th><th>TP1/TP2</th><th>Conf</th><th>Score</th><th>Why</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="panel">
+      <h2>2) Watchlist Near Trigger</h2>
+      <table id="watchTable"><thead><tr><th>Symbol</th><th>ret5</th><th>ret15</th><th>RSI</th><th>VR</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="panel">
+      <h2>3) Executed/Tracked Signals</h2>
+      <table id="trackTable"><thead><tr><th>Time</th><th>Symbol</th><th>Setup</th><th>Status</th><th>Outcome</th><th>TTL</th></tr></thead><tbody></tbody></table>
+    </div>
+    <div class="panel">
+      <h2>4) Market Regime Panel</h2>
+      <div id="regime"></div>
+      <hr/>
+      <h3>Scanner Status</h3>
+      <div id="scannerStatus"></div>
+    </div>
+  </section>
+
+<script src="/static/app.js"></script>
+</body>
+</html>
